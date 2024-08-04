@@ -289,5 +289,3 @@ app.use('/graphql', graphqlHTTP(async req => {
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
-
-// Тест
