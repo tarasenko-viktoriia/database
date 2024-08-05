@@ -47,7 +47,7 @@ app.post('/upload', upload.single("file"), async (req, res) => {
 
 const port = 4000;
 
-const sequelize = new Sequelize("test", "root", "123123", {
+const sequelize = new Sequelize("test", "root", "04121997", {
     host: 'localhost',
     dialect: 'mysql'
 });
@@ -143,6 +143,7 @@ const schema = buildSchema(`
         updatePlaylist(id: ID, playlist: PlaylistInput): Playlist
         updateUserNick(id: ID!, nick: String!): User
         setAvatar(avatarId: ID):File
+        deletePlaylist(id: ID!): Playlist
     }
 
     type User {
@@ -228,37 +229,41 @@ const root = {
     async getPlaylists(){
         return await Playlist.findAll({order: ['id']})
     },
-    async addPlaylist({playlist: {fileIds, ...playlist}}, {user}){
-        if (!user) return null
-
-        console.log(fileIds)
-
-        const newPlaylist = await user.createPlaylist({...playlist})
-        if (!(await user.hasFiles(fileIds))) return null
-
-        await newPlaylist.setFiles(fileIds) 
-        return newPlaylist
+    async addPlaylist({ playlist: { fileIds, ...playlist } }, { user }) {
+        if (!user) return null;
+    
+        console.log(fileIds);
+    
+        const newPlaylist = await user.createPlaylist({ ...playlist });
+        if (fileIds && fileIds.length > 0) {
+            const files = await File.findAll({ where: { id: fileIds } });
+            await newPlaylist.addFiles(files);
+        }
+        return newPlaylist;
     },
+
     async updatePlaylist({id, playlist: {fileIds, ...playlist}}, {user}){
         if (!user) return null
         const playlistToEdit = await Playlist.findByPk(id)
         if (!playlistToEdit || playlistToEdit.userId !== user.id) return null
         
-        if (!(await user.hasFiles(fileIds))) return null
+        if (fileIds && fileIds.length > 0) {
+            const files = await File.findAll({ where: { id: fileIds } });
+            await playlistToEdit.setFiles(files);
+        }
 
         Object.assign(playlistToEdit, playlist)
-        await playlistToEdit.setFiles(fileIds)
-
         await playlistToEdit.save()
         return playlistToEdit
     },
+
     async deletePlaylist({ id }, { user }) {
         if (!user) return null;
         const playlist = await Playlist.findByPk(id);
         if (!playlist || playlist.userId !== user.id) return null;
         await playlist.destroy();
         return { id };
-      },
+    },
 };
 
 const jwtCheck = req => {
