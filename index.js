@@ -144,6 +144,7 @@ const schema = buildSchema(`
         updateUserNick(id: ID!, nick: String!): User
         setAvatar(avatarId: ID!):User
         deletePlaylist(id: ID!): Playlist
+        addTracksToLibrary(fileIds: [ID!]!): [File]
     }
 
     type User {
@@ -271,6 +272,15 @@ const root = {
         await playlist.destroy();
         return { id };
     },
+    async addTracksToLibrary({ fileIds }, { user }) {
+        if (!user) return null;
+        
+        const files = await File.findAll({ where: { id: fileIds } });
+        
+        await user.addFiles(files);
+        
+        return files;
+    }
 };
 
 const jwtCheck = req => {
