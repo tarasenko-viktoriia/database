@@ -219,12 +219,8 @@ const root = {
         if (!user) return null;
         const file = await File.findByPk(avatarId);
         if (!file) return null;
-    
-        // Встановлюємо поле isAvatar в true
         file.isAvatar = true;
         await file.save();
-    
-        // Оновлюємо поле avatarId у користувача
         user.avatarId = avatarId;
         await user.save();
     
