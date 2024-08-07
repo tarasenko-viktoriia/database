@@ -142,7 +142,7 @@ const schema = buildSchema(`
         addPlaylist(playlist: PlaylistInput):Playlist
         updatePlaylist(id: ID, playlist: PlaylistInput): Playlist
         updateUserNick(id: ID!, nick: String!): User
-        setAvatar(avatarId: ID):File
+        setAvatar(avatarId: ID!):User
         deletePlaylist(id: ID!): Playlist
     }
 
@@ -214,13 +214,20 @@ const root = {
             throw new Error(`Error updating nickname: ${error.message}`);
         }
     },
-    async setAvatar({avatarId}, {user}){
-        if (!user) return null
-        if (!(await user.hasFile(avatarId))) return null
-
-        const file = await File.findByPk(avatarId)
-        file.isAvatar = true
-        return await file.save()
+    async setAvatar({ avatarId }, { user }) {
+        if (!user) return null;
+        const file = await File.findByPk(avatarId);
+        if (!file) return null;
+    
+        // Встановлюємо поле isAvatar в true
+        file.isAvatar = true;
+        await file.save();
+    
+        // Оновлюємо поле avatarId у користувача
+        user.avatarId = avatarId;
+        await user.save();
+    
+        return user;
     },
     async getPlaylist({id}, {user}){
 
