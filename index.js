@@ -145,6 +145,7 @@ const schema = buildSchema(`
         setAvatar(avatarId: ID!):User
         deletePlaylist(id: ID!): Playlist
         addTracksToLibrary(fileIds: [ID!]!): [File]
+        deleteTrack(id: ID!): File
     }
 
     type User {
@@ -276,7 +277,20 @@ const root = {
         await user.addFiles(files);
         
         return files;
-    }
+    },
+    async deleteTrack({ id }, { user }) {
+        if (!user) return null;
+        const file = await File.findByPk(id);
+        if (!file) return null;
+
+        await file.destroy();
+
+        if (fs.existsSync(file.path)) {
+            fs.unlinkSync(file.path);
+        }
+
+        return file;
+    },
 };
 
 const jwtCheck = req => {
