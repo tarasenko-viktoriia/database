@@ -166,7 +166,7 @@ const schema = buildSchema(`
         login(login: String!, password: String!): String
         getUser(id: ID!): User
         getPlaylist(id:ID!):Playlist
-        getPlaylists:[Playlist]
+        getPlaylists(userId: ID!): [Playlist]
     }
 
     type Mutation {
@@ -191,37 +191,34 @@ const schema = buildSchema(`
         playlists: [Playlist]
     }
     
-
     type Playlist {
-        id: ID,
-        userId: Int,
-        title: String,
-        createdAt: String,
-        updatedAt: String,
-
-        user:User,
+        id: ID
+        userId: Int
+        title: String
+        createdAt: String
+        updatedAt: String
+        user: User
         files: [File]
     }
 
     input PlaylistInput {
-        title: String,
+        title: String
         fileIds: [ID]
     }
     
-    type File{
-        id: ID,
-        originalname: String,
-        mimetype: String,
-        filename: String,
-        path: String,
-        size: String,
-        isAvatar: Boolean,
-
-        url: String,
-        user: User,
+    type File {
+        id: ID
+        originalname: String
+        mimetype: String
+        filename: String
+        path: String
+        size: String
+        isAvatar: Boolean
+        url: String
+        user: User
         playlist: Playlist
     }
-`);
+`)
 
 const root = {
     async register({ login, password }) {
@@ -265,8 +262,15 @@ const root = {
 
         return await Playlist.findByPk(id)
     },
-    async getPlaylists(){
-        return await Playlist.findAll({order: ['id']})
+    async getPlaylists({ userId }) {
+        if (!userId) {
+            throw new Error('userId аргумент є обов\'язковим');
+        }
+        
+        return await Playlist.findAll({ 
+            where: { userId },
+            order: [['id', 'ASC']] 
+        });
     },
     async addPlaylist({ playlist: { fileIds, ...playlist } }, { user }) {
         if (!user) return null;
