@@ -174,6 +174,7 @@ const schema = buildSchema(`
         getUser(id: ID!): User
         getPlaylist(id:ID!):Playlist
         getPlaylists(userId: ID!): [Playlist]
+        getFiles(userId: ID!): [File]
     }
 
     type Mutation {
@@ -186,6 +187,7 @@ const schema = buildSchema(`
         addTracksToLibrary(fileIds: [ID!]!): [File]
         deleteTrack(id: ID!): File
         addTracksToPlaylist(playlistId: ID!, fileIds: [ID!]!): Playlist
+        deleteFile(id: ID!): File
     }
 
     type User {
@@ -339,7 +341,27 @@ const root = {
         await playlist.addFiles(files);
     
         return playlist;
-    }
+    },
+    async getFiles({ userId }) {
+        if (!userId) {
+            throw new Error('userId аргумент є обов\'язковим');
+        }
+        
+        return await File.findAll({ 
+            where: { userId },
+            order: [['id', 'ASC']] 
+        });
+    },
+    async deleteFile({ id }, { user }) {
+        if (!user) return null;
+        
+        const file = await File.findByPk(id);
+        if (!file || file.userId !== user.id) return null;
+        
+        await file.destroy();
+        return { id };
+    },
+
 };
 
 const jwtCheck = req => {
