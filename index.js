@@ -281,15 +281,10 @@ const root = {
     async deleteTrack({ id }, { user }) {
         if (!user) return null;
         const file = await File.findByPk(id);
-        if (!file) return null;
-
+        if (!file || file.userId !== user.id) return null;
         await file.destroy();
+        return { id };
 
-        if (fs.existsSync(file.path)) {
-            fs.unlinkSync(file.path);
-        }
-
-        return file;
     },
 };
 
