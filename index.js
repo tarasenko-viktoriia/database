@@ -15,7 +15,7 @@ const saltRounds = 10;
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = "TestSecret";
 
-const { Sequelize, where } = require('sequelize');
+const { Sequelize, DataTypes } = require('sequelize');
 const cors = require('cors');
 
 
@@ -50,6 +50,31 @@ const port = 4000;
 const sequelize = new Sequelize("test", "root", "04121997", {
     host: 'localhost',
     dialect: 'mysql'
+});
+
+class PlaylistFile extends Sequelize.Model {
+
+}
+
+PlaylistFile.init({
+    playlistId: {
+        type: DataTypes.INTEGER,
+        references: {
+            model: 'Playlist',
+            key: 'id'
+        }
+    },
+    fileId: {
+        type: DataTypes.INTEGER,
+        references: {
+            model: 'File', 
+            key: 'id'
+        }
+    }
+}, {
+    sequelize,
+    modelName: 'PlaylistFile',
+    tableName: 'playlist_file' 
 });
 
 class File extends Sequelize.Model {
@@ -105,6 +130,9 @@ class Playlist extends Sequelize.Model {
     get files(){
         return this.getFiles()
     }
+    addFiles(files) {
+        return this.addFiles(files);
+    }
 }
 
 Playlist.init({
@@ -116,6 +144,10 @@ Playlist.belongsTo(User)
 
 Playlist.hasMany(File);
 File.belongsTo(Playlist);
+
+
+Playlist.belongsToMany(File, { through: PlaylistFile });
+File.belongsToMany(Playlist, { through: PlaylistFile });
 
 ;(async () => {
     try {
@@ -146,6 +178,7 @@ const schema = buildSchema(`
         deletePlaylist(id: ID!): Playlist
         addTracksToLibrary(fileIds: [ID!]!): [File]
         deleteTrack(id: ID!): File
+        addTracksToPlaylist(playlistId: ID!, fileIds: [ID!]!): Playlist
     }
 
     type User {
@@ -157,6 +190,7 @@ const schema = buildSchema(`
         avatars: [File]
         playlists: [Playlist]
     }
+    
 
     type Playlist {
         id: ID,
@@ -246,7 +280,6 @@ const root = {
         }
         return newPlaylist;
     },
-
     async updatePlaylist({id, playlist: {fileIds, ...playlist}}, {user}){
         if (!user) return null
         const playlistToEdit = await Playlist.findByPk(id)
@@ -261,7 +294,6 @@ const root = {
         await playlistToEdit.save()
         return playlistToEdit
     },
-
     async deletePlaylist({ id }, { user }) {
         if (!user) return null;
         const playlist = await Playlist.findByPk(id);
@@ -286,6 +318,17 @@ const root = {
         return { id };
 
     },
+    async addTracksToPlaylist({ playlistId, fileIds }, { user }) {
+        if (!user) return null;
+    
+        const playlist = await Playlist.findByPk(playlistId);
+        if (!playlist || playlist.userId !== user.id) return null;
+    
+        const files = await File.findAll({ where: { id: fileIds } });
+        await playlist.addFiles(files);
+    
+        return playlist;
+    }
 };
 
 const jwtCheck = req => {
