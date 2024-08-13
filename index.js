@@ -47,7 +47,7 @@ app.post('/upload', upload.single("file"), async (req, res) => {
 
 const port = 4000;
 
-const sequelize = new Sequelize("test", "root", "04121997", {
+const sequelize = new Sequelize("test", "root", "123123", {
     host: 'localhost',
     dialect: 'mysql'
 });
@@ -136,7 +136,14 @@ class Playlist extends Sequelize.Model {
 }
 
 Playlist.init({
-    title: Sequelize.STRING
+    title: Sequelize.STRING,
+    userId: {
+        type: DataTypes.INTEGER,
+        references: {
+            model: User,
+            key: 'id'
+        }
+    }
 }, { sequelize, modelName: 'playlist' });
 
 User.hasMany(Playlist)
