@@ -67,14 +67,14 @@ PlaylistFile.init({
     fileId: {
         type: DataTypes.INTEGER,
         references: {
-            model: 'File', 
+            model: 'File',
             key: 'id'
         }
     }
 }, {
     sequelize,
     modelName: 'PlaylistFile',
-    tableName: 'playlist_file' 
+    tableName: 'playlist_file'
 });
 
 class File extends Sequelize.Model {
@@ -336,11 +336,17 @@ const root = {
     async addTracksToPlaylist({ playlistId, fileIds }, { user }) {
         if (!user) return null;
     
+        console.log(`Adding tracks to playlist: ${playlistId}`, fileIds);
+    
         const playlist = await Playlist.findByPk(playlistId);
         if (!playlist || playlist.userId !== user.id) return null;
     
         const files = await File.findAll({ where: { id: fileIds } });
+        console.log('Files found:', files);
+    
         await playlist.addFiles(files);
+    
+        console.log('Tracks added successfully');
     
         return playlist;
     },
