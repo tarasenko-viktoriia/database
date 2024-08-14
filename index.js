@@ -33,10 +33,10 @@ app.post('/upload', upload.single("file"), async (req, res) => {
     if (req.file){
         console.log('FILE UPLOAD', req.file)
 
-        const {originalname, mimetype, filename, path, size} = req.file
+        const {originalname, artist, mimetype, filename, path, size} = req.file
         const {userId} = signedData
 
-        const newFile = await File.create({originalname, mimetype, filename, path, size, userId})
+        const newFile = await File.create({originalname,artist, mimetype, filename, path, size, userId})
         const {id, url} = newFile
         res.send({id, url})
     }
@@ -47,7 +47,7 @@ app.post('/upload', upload.single("file"), async (req, res) => {
 
 const port = 4000;
 
-const sequelize = new Sequelize("test", "root", "123123", {
+const sequelize = new Sequelize("test", "root", "04121997", {
     host: 'localhost',
     dialect: 'mysql'
 });
@@ -91,6 +91,7 @@ class File extends Sequelize.Model {
 
 File.init({
     originalname: Sequelize.STRING,
+    artist: Sequelize.STRING,
     mimetype: Sequelize.STRING,
     filename: Sequelize.STRING,
     path: Sequelize.STRING,
@@ -218,6 +219,7 @@ const schema = buildSchema(`
     type File {
         id: ID
         originalname: String
+        artist: String
         mimetype: String
         filename: String
         path: String
