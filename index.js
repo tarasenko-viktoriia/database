@@ -320,9 +320,15 @@ const root = {
     
         const playlist = await Playlist.findByPk(playlistId);
         if (!playlist || playlist.userId !== user.id) return null;
+    
         const files = await File.findAll({ where: { id: fileIds } });
+        if (!files || files.length === 0) {
+            return null; 
+        }
+    
         await playlist.addFiles(files);
-        return playlist;
+
+        return await Playlist.findByPk(playlistId, { include: [File] });
     },
     async deleteFile({ id }, { user }) {
         if (!user) return null;
