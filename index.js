@@ -128,11 +128,9 @@ class Playlist extends Sequelize.Model {
     get user() {
         return this.getUser();
     }
-    get files(){
-        return this.getFiles()
-    }
-    addFiles(files) {
-        return this.addFiles(files);
+
+    get files() {
+        return this.getFiles();
     }
 }
 
@@ -323,11 +321,10 @@ const root = {
     
         const files = await File.findAll({ where: { id: fileIds } });
         if (!files || files.length === 0) {
-            return null; 
+            return null;
         }
-    
         await playlist.addFiles(files);
-
+    
         return await Playlist.findByPk(playlistId, { include: [File] });
     },
     async deleteFile({ id }, { user }) {
