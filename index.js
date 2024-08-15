@@ -303,11 +303,8 @@ const root = {
     },
     async addTracksToLibrary({ fileIds }, { user }) {
         if (!user) return null;
-        
         const files = await File.findAll({ where: { id: fileIds } });
-        
         await user.addFiles(files);
-        
         return files;
     },
     async deleteTrack({ id }, { user }) {
@@ -321,18 +318,10 @@ const root = {
     async addTracksToPlaylist({ playlistId, fileIds }, { user }) {
         if (!user) return null;
     
-        console.log(`Adding tracks to playlist: ${playlistId}`, fileIds);
-    
         const playlist = await Playlist.findByPk(playlistId);
         if (!playlist || playlist.userId !== user.id) return null;
-    
         const files = await File.findAll({ where: { id: fileIds } });
-        console.log('Files found:', files);
-    
         await playlist.addFiles(files);
-    
-        console.log('Tracks added successfully');
-    
         return playlist;
     },
     async deleteFile({ id }, { user }) {
