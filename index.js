@@ -173,9 +173,8 @@ const schema = buildSchema(`
     type Query {
         login(login: String!, password: String!): String
         getUser(id: ID!): User
-        getPlaylist(id:ID!):Playlist
-        getPlaylists(userId: ID!): [Playlist]
-        getFiles(userId: ID!): [File]
+        getPlaylists: [Playlist]
+        getFiles: [File]
     }
 
     type Mutation {
@@ -269,20 +268,6 @@ const root = {
     
         return user;
     },
-    async getPlaylist({id}, {user}){
-
-        return await Playlist.findByPk(id)
-    },
-    async getPlaylists({ userId }) {
-        if (!userId) {
-            throw new Error('userId аргумент є обов\'язковим');
-        }
-        
-        return await Playlist.findAll({ 
-            where: { userId },
-            order: [['id', 'ASC']] 
-        });
-    },
     async addPlaylist({ playlist: { fileIds, ...playlist } }, { user }) {
         if (!user) return null;
     
@@ -350,16 +335,6 @@ const root = {
     
         return playlist;
     },
-    async getFiles({ userId }) {
-        if (!userId) {
-            throw new Error('userId аргумент є обов\'язковим');
-        }
-        
-        return await File.findAll({ 
-            where: { userId },
-            order: [['id', 'ASC']] 
-        });
-    },
     async deleteFile({ id }, { user }) {
         if (!user) return null;
         
@@ -368,6 +343,14 @@ const root = {
         
         await file.destroy();
         return { id };
+    },
+    async getPlaylists(_, { user }) {
+        if (!user) return null;
+        return await Playlist.findAll({ where: { userId: user.id } });
+    },
+    async getFiles(_, { user }) {
+        if (!user) return null;
+        return await File.findAll({ where: { userId: user.id } });
     },
 
 };
