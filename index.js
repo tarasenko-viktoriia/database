@@ -186,6 +186,7 @@ const schema = buildSchema(`
         deleteTrack(id: ID!): File
         addTracksToPlaylist(playlistId: ID!, fileIds: [ID!]!): Playlist
         deleteFile(id: ID!): File
+        updateTrack(id: ID!, originalname: String!, artist: String!): File
     }
 
     type User {
@@ -343,6 +344,18 @@ const root = {
     async getFiles(_, { user }) {
         if (!user) return null;
         return await File.findAll({ where: { userId: user.id } });
+    },
+    async updateTrack({ id, originalname, artist }, { user }) {
+        if (!user) return null;
+
+        const file = await File.findByPk(id);
+        if (!file || file.userId !== user.id) return null;
+
+        file.originalname = originalname;
+        file.artist = artist;
+        await file.save();
+
+        return file;
     },
 
 };
