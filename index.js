@@ -96,7 +96,6 @@ File.init({
     filename: Sequelize.STRING,
     path: Sequelize.STRING,
     size: Sequelize.INTEGER,
-    isAvatar: Sequelize.BOOLEAN,
 }, { sequelize, modelName: 'file' });
 
 class User extends Sequelize.Model {
@@ -106,9 +105,6 @@ class User extends Sequelize.Model {
     get files(){
         return this.getFiles()
     }
-    get avatars(){
-        return this.getFiles({where: {isAvatar:true}})
-    }
 }
 User.init({
     login: {
@@ -117,7 +113,6 @@ User.init({
         unique: true,
     },
     nick: Sequelize.STRING,
-    avatarId: Sequelize.INTEGER,
     password: Sequelize.STRING,
 }, { sequelize, modelName: 'user' });
 
@@ -180,7 +175,6 @@ const schema = buildSchema(`
         addPlaylist(playlist: PlaylistInput):Playlist
         updatePlaylist(id: ID, playlist: PlaylistInput): Playlist
         updateUserNick(id: ID!, nick: String!): User
-        setAvatar(avatarId: ID!):User
         deletePlaylist(id: ID!): Playlist
         addTracksToLibrary(fileIds: [ID!]!): [File]
         deleteTrack(id: ID!): File
@@ -195,7 +189,6 @@ const schema = buildSchema(`
         login: String
         nick: String
         files: [File]
-        avatars: [File]
         playlists: [Playlist]
     }
     
@@ -222,7 +215,6 @@ const schema = buildSchema(`
         filename: String
         path: String
         size: String
-        isAvatar: Boolean
         url: String
         user: User
         playlist: Playlist
@@ -255,17 +247,6 @@ const root = {
         } catch (error) {
             throw new Error(`Error updating nickname: ${error.message}`);
         }
-    },
-    async setAvatar({ avatarId }, { user }) {
-        if (!user) return null;
-        const file = await File.findByPk(avatarId);
-        if (!file) return null;
-        file.isAvatar = true;
-        await file.save();
-        user.avatarId = avatarId;
-        await user.save();
-    
-        return user;
     },
     async addPlaylist({ playlist: { fileIds, ...playlist } }, { user }) {
         if (!user) return null;
